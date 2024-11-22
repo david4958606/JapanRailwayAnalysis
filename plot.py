@@ -54,6 +54,19 @@ def create_graph_form_csv(csv_file):
     return G
 
 
+def create_weighted_graph_form_csv(csv_file):
+    df = pd.read_csv(csv_file)
+    G = nx.Graph()
+    for _, row in df.iterrows():
+        station1 = row['station_name_1']
+        station2 = row['station_name_2']
+        if G.has_edge(station1, station2):
+            G[station1][station2]['weight'] += 1
+        else:
+            G.add_edge(station1, station2, weight=1)
+    return G
+
+
 # 保存图到文件
 def save_graph(G, file_path):
     with open(file_path, 'wb') as f:
@@ -80,6 +93,32 @@ def visualize_graph(G, output_file, size=100, dpi=300):
     nx.draw_networkx_labels(G, pos, font_size=8, font_family='Yu Gothic')
 
     plt.title('JR Lines Visualization')
+    plt.axis('off')
+    plt.savefig(output_file, format='png', dpi=dpi)  # 保存为文件，设置较高的DPI以提高分辨率
+    plt.close()
+
+def visualize_weighted_graph(G, output_file, size=20, dpi=300, title="Title", layout='spring', seed=42):
+    plt.figure(figsize=(size, size))
+    if layout == 'spring':
+        pos = nx.spring_layout(G, seed=seed)
+    elif layout == 'kamada':
+        pos = nx.kamada_kawai_layout(G)
+    elif layout == 'circular':
+        pos = nx.circular_layout(G)
+    else:
+        pos = nx.shell_layout(G)
+
+    # Fix japanese font
+    plt.rc('font', family='Yu Gothic')
+
+    # 绘制节点和边
+    nx.draw_networkx_nodes(G, pos, node_size=100, node_color='blue', alpha=0.6)
+    nx.draw_networkx_edges(G, pos, edge_color='gray', alpha=0.5)
+    nx.draw_networkx_labels(G, pos, font_size=8, font_family='Yu Gothic')
+    edge_labels = nx.get_edge_attributes(G, 'weight')
+    nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_size=8, font_family='Yu Gothic')
+
+    plt.title(title)
     plt.axis('off')
     plt.savefig(output_file, format='png', dpi=dpi)  # 保存为文件，设置较高的DPI以提高分辨率
     plt.close()
