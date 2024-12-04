@@ -1,5 +1,6 @@
 import networkx as nx
 import community.community_louvain as community_louvain
+from infomap import Infomap
 from collections import Counter
 import json
 
@@ -88,6 +89,16 @@ def find_all_communities(G):
             comm_dict[community] = [node]
 
     return comm_dict
+
+def infomap_community(G):
+    im = Infomap("--two-level --directed")
+    for u, v, data in G.edges(data=True):
+        weight = data['weight'] if 'weight' in data else 1
+        im.add_link(u, v, weight)
+    im.run()
+    print("社区划分结果:")
+    for node_id, module_id in im.modules.items():
+        print(f"节点 {node_id} 属于社区 {module_id}")
 
 
 # dict to json
